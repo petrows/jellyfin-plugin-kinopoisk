@@ -2,6 +2,19 @@
 
 Fetches metadata from https://www.kinopoisk.ru/. This site is popular in the Russian-speaking community and contains almost no English-language information, so further description will be in Russian.
 
+## Local build
+
+```bash
+VERSION=10.10.4.0
+docker run --rm -v "$PWD":/src -w /src -u "$(id -u):$(id -g)" -e HOME=/tmp \
+  mcr.microsoft.com/dotnet/sdk:9.0 \
+  dotnet build --configuration Release --property:Version=$VERSION ./src
+
+zip --junk-paths dist/kinopoisk/jellyfin-plugin-kinopoisk_$VERSION.zip \
+  src/Jellyfin.Plugin.Kinopoisk/bin/Release/net9.0/Jellyfin.Plugin.Kinopoisk.dll \
+  src/KinopoiskUnofficialInfo.ApiClient/bin/Release/net9.0/KinopoiskUnofficialInfo.ApiClient.dll
+```
+
 ## Установка
 
 Администрирование - Панель - Расширенное - Плагины - вкладка Репозитории - добавить адрес https://raw.githubusercontent.com/petrows/jellyfin-plugin-kinopoisk/master/dist/manifest.json.

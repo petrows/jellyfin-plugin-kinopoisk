@@ -9,6 +9,14 @@
     "imageUrl": "https://kinopoisk.userecho.com/s/attachments/28876/0/1/25f8c0315e6ccb2aa6c2642e48f2c9e9.png",
     "versions": [
       {
+        "version": "10.10.4.0",
+        "checksum": "c4cd5c16ee3ebd1abb046658602fd9f0",
+        "changelog": "Форк petrows:\n* Имена файлов / папок очищаются перед поиском как в Kodi: `_` и `.` в пробелы, теги релизов (S01, 1080p, WEB-DL, x264, ...) и `[...]` отрезаются, год из имени используется для фильтра\n* Русские названия латиницей (Deti.peremen, Holostyak) ищутся ещё раз в кириллице, если точного совпадения нет\n* После ответа \"You exceeded the quota\" (402) все запросы к API в течение часа сразу завершаются ошибкой, без обращения к API",
+        "targetAbi": "10.10.0",
+        "sourceUrl": "https://raw.githubusercontent.com/petrows/jellyfin-plugin-kinopoisk/Fix-plugin-search-translit/dist/kinopoisk/jellyfin-plugin-kinopoisk_10.10.4.0.zip",
+        "timestamp": "2026-11-23T19:55:12Z"
+      },
+      {
         "version": "10.10.3.0",
         "checksum": "de4cf02e03339d61933a6869bf6be6f4",
         "changelog": "Исправлена совместимость с 10.10.*",
