@@ -20,10 +20,12 @@ namespace Jellyfin.Plugin.Kinopoisk.MetadataProviders
         private readonly ILogger _logger;
         private readonly IKinopoiskApiClient _apiClient;
         private readonly IProviderIdResolver<TLookupInfoType> _providerIdResolver;
+        private readonly KinopoiskSearch _search;
 
-        public BaseVideoMetadataProvider(IKinopoiskApiClient kinopoiskApiClient, IProviderIdResolver<TLookupInfoType> providerIdResolver, ILogger logger, IHttpClientFactory httpClientFactory)
+        public BaseVideoMetadataProvider(IKinopoiskApiClient kinopoiskApiClient, IProviderIdResolver<TLookupInfoType> providerIdResolver, KinopoiskSearch search, ILogger logger, IHttpClientFactory httpClientFactory)
             : base(httpClientFactory)
         {
+            _search = search ?? throw new System.ArgumentNullException(nameof(search));
             _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
             _apiClient = kinopoiskApiClient ?? throw new System.ArgumentNullException(nameof(kinopoiskApiClient));
             _providerIdResolver = providerIdResolver ?? throw new System.ArgumentNullException(nameof(providerIdResolver));
@@ -79,7 +81,12 @@ namespace Jellyfin.Plugin.Kinopoisk.MetadataProviders
             }
             else
             {
-                return (await _apiClient.SearchByKeyword(searchInfo.Name, cancellationToken: cancellationToken)).ToRemoteSearchResults(_logger);
+                // Cleaned name + transliteration (KinopoiskSearch), exact matches first
+                var searchResult = await _search.Search(searchInfo.Name, cancellationToken);
+                return searchResult.All
+                    .Select(f => f.ToRemoteSearchResult(_logger))
+                    .Where(r => r != null)
+                    .ToArray();
             }
         }
 

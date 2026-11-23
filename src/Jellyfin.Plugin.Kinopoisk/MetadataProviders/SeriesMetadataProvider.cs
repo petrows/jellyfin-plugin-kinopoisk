@@ -9,8 +9,8 @@ namespace Jellyfin.Plugin.Kinopoisk.MetadataProviders
 {
     public class SeriesMetadataProvider : BaseVideoMetadataProvider<Series, SeriesInfo>
     {
-        public SeriesMetadataProvider(IKinopoiskApiClient kinopoiskApiClient, IProviderIdResolver<SeriesInfo> providerIdResolver, ILogger<SeriesMetadataProvider> logger, IHttpClientFactory httpClientFactory)
-            : base(kinopoiskApiClient, providerIdResolver, logger, httpClientFactory)
+        public SeriesMetadataProvider(IKinopoiskApiClient kinopoiskApiClient, IProviderIdResolver<SeriesInfo> providerIdResolver, KinopoiskSearch search, ILogger<SeriesMetadataProvider> logger, IHttpClientFactory httpClientFactory)
+            : base(kinopoiskApiClient, providerIdResolver, search, logger, httpClientFactory)
         {
         }
 

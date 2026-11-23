@@ -8,6 +8,10 @@ env:
   MANIFEST_FILE: dist/manifest.json
   TARGET_ABI: 10.10.0
 
+# The release + the manifest commit need write access (read-only by default in forks)
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest

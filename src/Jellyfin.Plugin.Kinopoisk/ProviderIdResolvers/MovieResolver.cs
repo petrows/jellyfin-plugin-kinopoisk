@@ -14,10 +14,12 @@ namespace Jellyfin.Plugin.Kinopoisk.ProviderIdResolvers
         where T : ItemLookupInfo
     {
         private readonly IKinopoiskApiClient _kinopoiskApiClient;
+        private readonly KinopoiskSearch _search;
 
-        public VideoResolver(IKinopoiskApiClient kinopoiskApiClient, ILogger<VideoResolver<T>> logger) : base(logger)
+        public VideoResolver(IKinopoiskApiClient kinopoiskApiClient, KinopoiskSearch search, ILogger<VideoResolver<T>> logger) : base(logger)
         {
             _kinopoiskApiClient = kinopoiskApiClient ?? throw new ArgumentNullException(nameof(kinopoiskApiClient));
+            _search = search ?? throw new ArgumentNullException(nameof(search));
         }
 
         public override async Task<(bool IsSuccess, int ProviderId)> TryResolve(T info, CancellationToken? ct = null)
@@ -35,16 +37,19 @@ namespace Jellyfin.Plugin.Kinopoisk.ProviderIdResolvers
             }
 
             _logger.LogDebug($"Trying to get suitable film with name '{info.Name}'...");
-            var searchResult = await _kinopoiskApiClient.SearchByKeyword(info.Name, 1, ct ?? CancellationToken.None);
-            if (searchResult.SearchFilmsCountResult < 1 || searchResult?.Films.Count < 1)
+            var searchResult = await _search.Search(info.Name, ct ?? CancellationToken.None);
+            if (searchResult.All.Count < 1)
             {
                 _logger.LogDebug($"Received empty search result");
                 return (false, 0);
             }
-            var candidates = searchResult.Films.ToArray();
-            _logger.LogDebug($"Received {candidates.Length} results, trying to filter and match...");
+            // Exact title matches only, when there are any
+            var candidates = (searchResult.Matched.Count > 0 ? searchResult.Matched : searchResult.All).ToArray();
+            _logger.LogDebug($"Received {searchResult.All.Count} results ({searchResult.Matched.Count} exact matches), trying to filter and match...");
 
-            var candidates_by_year = FilterByYear(info, candidates);
+            // Year: from the metadata, else from the name ("Title.2024.1080p")
+            var year = info.Year ?? searchResult.Year;
+            var candidates_by_year = FilterByYear(year, candidates);
 
             // Check if there are single candidate filtered by year
             possibleResult = await TryResolveBySingleCandidateLeft(info, candidates_by_year, ct);
@@ -100,6 +105,9 @@ namespace Jellyfin.Plugin.Kinopoisk.ProviderIdResolvers
                         }
 
                         _logger.LogDebug($"Film {candidate.FilmId} '{film.GetLocalName()}' has ImdbId '{film?.ImdbId}', skipping, {candidates.Count - ++index} candidates left...");
+                    } catch (KinopoiskQuotaExceededException)
+                    {
+                        throw;
                     } catch (Exception e)
                     {
                         _logger.LogError(e, $"Error while retrieving film {candidate.FilmId}");
@@ -123,15 +131,15 @@ namespace Jellyfin.Plugin.Kinopoisk.ProviderIdResolvers
             return Task.FromResult((false, 0));
         }
 
-        public ICollection<FilmSearchResponse_films> FilterByYear(T info, ICollection<FilmSearchResponse_films> candidates)
+        public ICollection<FilmSearchResponse_films> FilterByYear(int? year, ICollection<FilmSearchResponse_films> candidates)
         {
-            if (!info.Year.HasValue)
+            if (!year.HasValue)
             {
-                _logger.LogDebug($"Can't filter by year, no year set in metadata...");
+                _logger.LogDebug($"Can't filter by year, no year in metadata or name...");
                 return Array.Empty<FilmSearchResponse_films>();
             }
 
-            var targetYear = info.Year.Value.ToString();
+            var targetYear = year.Value.ToString();
             var res = candidates.Where(f => f.Year == targetYear).ToArray();
             _logger.LogDebug($"Filtered by year {targetYear}, {res.Length} results left...");
             return res;
