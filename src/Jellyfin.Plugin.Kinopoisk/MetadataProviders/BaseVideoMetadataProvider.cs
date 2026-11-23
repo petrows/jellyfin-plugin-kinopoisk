@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.Kinopoisk.Configuration;
 using Jellyfin.Plugin.Kinopoisk.ProviderIdResolvers;
 using KinopoiskUnofficialInfo.ApiClient;
 using MediaBrowser.Controller.Entities;
@@ -54,19 +55,28 @@ namespace Jellyfin.Plugin.Kinopoisk.MetadataProviders
             if (result.Item != null)
                 result.HasMetadata = true;
 
-            var staff = await _apiClient.GetStaff(kinopoiskId, cancellationToken);
+            // Staff / trailers: one API request each, optional (plugin settings)
+            var config = Plugin.Instance?.Configuration ?? new PluginConfiguration();
 
-            cancellationToken.ThrowIfCancellationRequested();
+            if (config.LoadStaff)
+            {
+                var staff = await _apiClient.GetStaff(kinopoiskId, cancellationToken);
 
-            var sanitizedPersons = await SanitizeEmptyImagePersonInfos(staff.ToPersonInfos());
-            foreach (var item in sanitizedPersons)
-                result.AddPerson(item);
+                cancellationToken.ThrowIfCancellationRequested();
 
-            var trailers = await _apiClient.GetTrailers(kinopoiskId, cancellationToken);
+                var sanitizedPersons = await SanitizeEmptyImagePersonInfos(staff.ToPersonInfos());
+                foreach (var item in sanitizedPersons)
+                    result.AddPerson(item);
+            }
 
-            var remoteTrailers = trailers.ToMediaUrls();
-            if (remoteTrailers is not null)
-                result.Item.RemoteTrailers = remoteTrailers;
+            if (config.LoadTrailers && result.Item != null)
+            {
+                var trailers = await _apiClient.GetTrailers(kinopoiskId, cancellationToken);
+
+                var remoteTrailers = trailers.ToMediaUrls();
+                if (remoteTrailers is not null)
+                    result.Item.RemoteTrailers = remoteTrailers;
+            }
 
             return result;
         }

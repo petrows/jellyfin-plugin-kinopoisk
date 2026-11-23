@@ -16,6 +16,27 @@
                             <a href="https://kinopoiskapiunofficial.tech">https://kinopoiskapiunofficial.tech</a>
                         </div>
                     </div>
+                    <div class="inputContainer">
+                        <label class="inputeLabel inputLabelUnfocused" for="CacheDays">Кэш ответов API, дней</label>
+                        <input id="CacheDays" name="CacheDays" type="number" min="0" is="emby-input" />
+                        <div class="fieldDescription">Ответы по фильмам, актёрам и трейлерам хранятся на диске:
+                            повторное обновление метаданных не тратит дневную квоту API. 0 - не кэшировать.
+                        </div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="LoadStaff" name="LoadStaff" type="checkbox" is="emby-checkbox" />
+                            <span>Загружать актёров и съёмочную группу</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">Один запрос к API на фильм / сериал.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="LoadTrailers" name="LoadTrailers" type="checkbox" is="emby-checkbox" />
+                            <span>Загружать трейлеры</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">Один запрос к API на фильм / сериал.</div>
+                    </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -33,6 +54,9 @@
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(KinopoiskPluginConfig.pluginUniqueId).then(function (config) {
                     $('#ApiToken').val(config.ApiToken).change();
+                    $('#CacheDays').val(config.CacheDays).change();
+                    $('#LoadStaff').prop('checked', config.LoadStaff);
+                    $('#LoadTrailers').prop('checked', config.LoadTrailers);
                     Dashboard.hideLoadingMsg();
                 });
             });
@@ -41,6 +65,9 @@
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(KinopoiskPluginConfig.pluginUniqueId).then(function (config) {
                     config.ApiToken = $('#ApiToken').val();
+                    config.CacheDays = Math.max(0, parseInt($('#CacheDays').val(), 10) || 0);
+                    config.LoadStaff = $('#LoadStaff').prop('checked');
+                    config.LoadTrailers = $('#LoadTrailers').prop('checked');
                     ApiClient.updatePluginConfiguration(KinopoiskPluginConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });

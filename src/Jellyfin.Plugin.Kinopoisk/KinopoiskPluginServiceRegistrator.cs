@@ -1,6 +1,9 @@
+using System;
+using System.IO;
 using System.Net.Http;
 using Jellyfin.Plugin.Kinopoisk.ProviderIdResolvers;
 using KinopoiskUnofficialInfo.ApiClient;
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Entities;
@@ -23,8 +26,16 @@ namespace Jellyfin.Plugin.Kinopoisk
                 sp.GetRequiredService<ILogger<KinopoiskApiClient>>(),
                 sp.GetRequiredService<IHttpClientFactory>()
             ));
-            serviceCollection.AddSingleton<IKinopoiskApiClient>((sp) => new CachedKinopoiskApiClient(
+            // API -> disk cache (by id, days, <data>/kinopoisk-cache: survives
+            // restarts and plugin updates) -> memory cache (1 min, also search)
+            serviceCollection.AddSingleton((sp) => new DiskCachedKinopoiskApiClient(
                 sp.GetRequiredService<KinopoiskApiClient>(),
+                Path.Combine(sp.GetRequiredService<IApplicationPaths>().DataPath, "kinopoisk-cache"),
+                () => TimeSpan.FromDays(Math.Max(0, Plugin.Instance?.Configuration?.CacheDays ?? 0)),
+                sp.GetRequiredService<ILogger<DiskCachedKinopoiskApiClient>>()
+            ));
+            serviceCollection.AddSingleton<IKinopoiskApiClient>((sp) => new CachedKinopoiskApiClient(
+                sp.GetRequiredService<DiskCachedKinopoiskApiClient>(),
                 sp.GetRequiredService<IMemoryCache>(),
                 sp.GetRequiredService<ILogger<CachedKinopoiskApiClient>>()
             ));
