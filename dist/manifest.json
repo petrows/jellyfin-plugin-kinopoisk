@@ -9,6 +9,14 @@
     "imageUrl": "https://kinopoisk.userecho.com/s/attachments/28876/0/1/25f8c0315e6ccb2aa6c2642e48f2c9e9.png",
     "versions": [
       {
+        "version": "10.10.5.0",
+        "checksum": "9bf7d57ef1e7981ba9a1107a7e8a2f6d",
+        "changelog": "Форк petrows:\n* Ответы API по фильмам, актёрам, трейлерам и персонам кэшируются на диске (`<data>/kinopoisk-cache`, по умолчанию 30 дней, настройка \"Кэш ответов API, дней\", 0 - выключить): повторное обновление метаданных библиотеки не тратит дневную квоту\n* Загрузку актёров и трейлеров можно отключить в настройках плагина (по одному запросу к API на фильм / сериал)",
+        "targetAbi": "10.10.0",
+        "sourceUrl": "https://raw.githubusercontent.com/petrows/jellyfin-plugin-kinopoisk/Fix-plugin-search-translit/dist/kinopoisk/jellyfin-plugin-kinopoisk_10.10.5.0.zip",
+        "timestamp": "2026-11-23T20:14:30Z"
+      },
+      {
         "version": "10.10.4.0",
         "checksum": "c4cd5c16ee3ebd1abb046658602fd9f0",
         "changelog": "Форк petrows:\n* Имена файлов / папок очищаются перед поиском как в Kodi: `_` и `.` в пробелы, теги релизов (S01, 1080p, WEB-DL, x264, ...) и `[...]` отрезаются, год из имени используется для фильтра\n* Русские названия латиницей (Deti.peremen, Holostyak) ищутся ещё раз в кириллице, если точного совпадения нет\n* После ответа \"You exceeded the quota\" (402) все запросы к API в течение часа сразу завершаются ошибкой, без обращения к API",
